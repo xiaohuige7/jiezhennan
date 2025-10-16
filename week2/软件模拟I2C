@@ -1,0 +1,97 @@
+#ifndef I2C_H
+#define I2C_H
+
+#include "RM.h"
+
+// 函数声明
+void I2C_Start(void);
+void I2C_Stop(void);
+void I2C_SendByte(unsigned char data);
+unsigned char I2C_ReceiveAck(void);
+void I2C_SendData(unsigned char data);
+
+#endif
+#include "i2c.h"
+
+// 延时函数（需要根据实际平台实现）
+void I2C_Delay(void) 
+{
+    // 这里需要根据实际MCU的频率添加适当的延时
+    // 例如：for(int i=0; i<100; i++);
+}
+
+// 起始条件
+void I2C_Start(void) 
+{
+    SDA_High();
+    SCL_High();
+    I2C_Delay();
+    SDA_Low();
+    I2C_Delay();
+    SCL_Low();
+    I2C_Delay();
+}
+
+// 终止条件
+void I2C_Stop(void) 
+{
+    SDA_Low();
+    I2C_Delay();
+    SCL_High();
+    I2C_Delay();
+    SDA_High();
+    I2C_Delay();
+}
+
+// 发送一个字节
+void I2C_SendByte(unsigned char data) {
+    unsigned char i;
+    
+    for (i = 0; i < 8; i++) 
+    {
+        if (data & 0x80) 
+        {
+            SDA_High();
+        } 
+        else 
+        {
+            SDA_Low();
+        }
+        I2C_Delay();
+        
+        SCL_High();
+        I2C_Delay();
+        SCL_Low();
+        I2C_Delay();
+        
+        data <<= 1;
+    }
+}
+
+// 接收应答
+unsigned char I2C_ReceiveAck(void) 
+{
+    unsigned char ack;
+    
+    SDA_High();  // 释放SDA线，设置为输入模式
+    I2C_Delay();
+    
+    SCL_High();
+    I2C_Delay();
+    
+    ack = SDA_Read();  // 读取应答位
+    
+    SCL_Low();
+    I2C_Delay();
+    
+    return ack;  // 返回0表示应答，1表示非应答
+}
+
+// 整个发送流程
+void I2C_SendData(unsigned char data) 
+{
+    I2C_Start();           // 起始条件
+    I2C_SendByte(data);    // 发送数据字节
+    I2C_ReceiveAck();      // 接收应答
+    I2C_Stop();            // 停止条件
+}
